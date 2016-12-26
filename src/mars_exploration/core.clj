@@ -1,6 +1,7 @@
 (ns mars-exploration.core
   (:gen-class))
 
+
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
@@ -22,23 +23,31 @@
    coordinate as a parameter."
   [[x y]]
   {:lower-bounds {:x 0 :y 0} 
-   :upper-bounds {:x x :y y}
-   :probes []})
+   :upper-bounds {:x x :y y}})
+
+(defn get-bounds
+  "Extracts the lower-left and upper-right coordinates from a plateau."
+  [plateau]
+  (let [{lx :x ly :y} (get plateau :lower-bounds)
+        {ux :x uy :y} (get plateau :upper-bounds)]
+    [[lx ly] [ux uy]]))
+
+(defn is-on-plateau?
+  "Checks whether a probe is on the plateau or if it has fallen."
+  [plateau probe]
+  (let [[[lx ly] [ux uy]] (get-bounds plateau)
+        {x :x y :y} probe]
+    (if (and (<= lx x ux) (<= ly y uy))
+      true
+      false)))
 
 (defn new-probe
   "Creates a new probe."
   [x y direction]
-  {:x x :y y :direction direction})
-
-;; TODO check for out of bounds?!
-(defn add-probe
-  "Adds a new probe to an existing plateau. Takes an existing plateau
-  and the probe's ''x'' and ''y'' position on the plateau and its ''direction''."
-  [plateau x y direction]
-  (let [probe (new-probe x y direction)
-        probes (get plateau :probes)
-        probes' (conj probes probe)]
-    (assoc plateau :probes probes')))
+  {:x x
+   :y y
+   :direction direction
+   :fallen? false})
 
 (defn move-probe-forward
   "Moves a probe in its current direction."
@@ -79,18 +88,26 @@
   [probe seq-of-moves]
   (reduce apply-movement probe seq-of-moves))
 
-(defn get-bounds
-  "Extracts the lower-left and upper-right coordinates from a plateau."
-  [plateau]
-  (let [{lx :x ly :y} (get plateau :lower-bounds)
-        {ux :x uy :y} (get plateau :upper-bounds)]
-    [[lx ly] [ux uy]]))
+(defn set-fallen
+  "Marks a probe as fallen. If a status is provided, set that to the probe."
+  ([probe]
+   (assoc probe :fallen? true))
+  ([probe status]
+   (assoc probe :fallen? status)))
 
-(defn is-on-plateau?
-  "Checks whether a probe is on the plateau or if it has fallen."
-  [plateau probe]
-  (let [[[lx ly] [ux uy]] (get-bounds plateau)
-        {x :x y :y} probe]
-    (if (and (<= lx x ux) (<= ly y uy))
-      true
-      false)))
+(defn move-and-check
+  "Moves a probe over a plateau (if it has not fallen yet)
+   and marks it as \"fallen\" if it walks off the plateau."
+  [plateau probe move]
+  (let [probe' (apply-movement probe move)
+        fallen? (not (is-on-plateau? plateau probe))
+        fallen?' (not (is-on-plateau? plateau probe'))]
+    (cond
+      fallen? probe
+      :else (set-fallen probe' fallen?'))))
+
+(defn move-over-plateau
+  "Moves a probe over a plateau. If the probes falls off the plateau,
+   it won't move anymore."
+  [plateau probe seq-of-moves]
+  (reduce (partial move-and-check plateau) probe seq-of-moves))

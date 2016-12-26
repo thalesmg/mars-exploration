@@ -34,6 +34,27 @@
     (fact "The examples are all on the plateau"
       (is-on-plateau? plateau5x5 probe1) => truthy
       (is-on-plateau? plateau5x5 probe2) => truthy
-      (is-on-plateau? plateau5x5 probe1') => truthy
-      (is-on-plateau? plateau5x5 probe2') => truthy)))
+      (is-on-plateau?
+       plateau5x5
+       (move-over-plateau plateau5x5 probe1 moves1)) => truthy
+      (is-on-plateau?
+       plateau5x5
+       (move-over-plateau plateau5x5 probe2 moves2)) => truthy)))
 
+(facts "About falling probes"
+  (fact "A probe can be on the border of the plateau without falling"
+    (let [probe (new-probe 5 5 :S)]
+      (is-on-plateau? plateau5x5 probe) => truthy))
+  (tabular
+   (fact "A fallen probe can neither move nor turn"
+     (let [p (assoc (new-probe 11 11 :N) :fallen? true)]
+       (move-and-check plateau5x5 p ?move) => p))
+   ?move
+   :move
+   :left
+   :right)
+  (fact "Once a probe falls, it stays down."
+    (let [before (new-probe 5 5 :N)
+          moves (map char->move "MMMM")
+          after (set-fallen (new-probe 5 6 :N))]
+      (move-over-plateau plateau5x5 before moves) => after)))
