@@ -22,13 +22,18 @@
     (move-probe-forward (new-probe 2 2 :S)) => (new-probe 2 1 :S)))
 
 (facts "About the given examples"
-  (fact "The examples should be reproduced"
-    (let [moves1 (map char->move "LMLMLMLMM")
-          moves2 (map char->move "MMRMMRMRRM")
-          probe1 (new-probe 1 2 :N)
-          probe2 (new-probe 3 3 :E)
-          probe1' (new-probe 1 3 :N)
-          probe2' (new-probe 5 1 :E)]
+  (let [moves1 (map char->move "LMLMLMLMM")
+        moves2 (map char->move "MMRMMRMRRM")
+        probe1 (new-probe 1 2 :N)
+        probe2 (new-probe 3 3 :E)
+        probe1' (new-probe 1 3 :N)
+        probe2' (new-probe 5 1 :E)]
+    (fact "The examples should be reproduced"
       (apply-movements probe1 moves1) => probe1'
-      (apply-movements probe2 moves2) => probe2')))
+      (apply-movements probe2 moves2) => probe2')
+    (fact "The examples are all on the plateau"
+      (is-on-plateau? plateau5x5 probe1) => truthy
+      (is-on-plateau? plateau5x5 probe2) => truthy
+      (is-on-plateau? plateau5x5 probe1') => truthy
+      (is-on-plateau? plateau5x5 probe2') => truthy)))
 

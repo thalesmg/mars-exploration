@@ -78,3 +78,19 @@
   "Applies a sequence of movement keys to a probe."
   [probe seq-of-moves]
   (reduce apply-movement probe seq-of-moves))
+
+(defn get-bounds
+  "Extracts the lower-left and upper-right coordinates from a plateau."
+  [plateau]
+  (let [{lx :x ly :y} (get plateau :lower-bounds)
+        {ux :x uy :y} (get plateau :upper-bounds)]
+    [[lx ly] [ux uy]]))
+
+(defn is-on-plateau?
+  "Checks whether a probe is on the plateau or if it has fallen."
+  [plateau probe]
+  (let [[[lx ly] [ux uy]] (get-bounds plateau)
+        {x :x y :y} probe]
+    (if (and (<= lx x ux) (<= ly y uy))
+      true
+      false)))
