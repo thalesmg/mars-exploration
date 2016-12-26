@@ -2,10 +2,6 @@
   (:gen-class))
 
 
-(defn -main
-  "I don't do a whole lot ... yet."
-  [& args]
-  (println "Hello, World!"))
 
 (defn char->move
   "Converts a single character to a corresponding move.
@@ -17,6 +13,28 @@
     \R :right
     \M :move
     :noOp))
+
+(def map-char-to-dir
+  {\N :N
+   \E :E
+   \W :W
+   \S :S})
+
+(def map-dir-to-char
+  (reduce
+   (fn [acc [k v]] (assoc acc v k))
+   {}
+   map-char-to-dir))
+
+(defn char->direction
+  "Converts a single character to a compass direction."
+  [c]
+  (map-char-to-dir c))
+
+(defn direction->char
+  "Converts a compass direction to a character."
+  [d]
+  (map-dir-to-char d))
 
 (defn new-plateau
   "Creates a new plateau to be explored. Takes the upper-right
@@ -40,6 +58,8 @@
     (if (and (<= lx x ux) (<= ly y uy))
       true
       false)))
+
+(def is-fallen? (complement is-on-plateau?))
 
 (defn new-probe
   "Creates a new probe."
@@ -100,8 +120,8 @@
    and marks it as \"fallen\" if it walks off the plateau."
   [plateau probe move]
   (let [probe' (apply-movement probe move)
-        fallen? (not (is-on-plateau? plateau probe))
-        fallen?' (not (is-on-plateau? plateau probe'))]
+        fallen? (is-fallen? plateau probe)
+        fallen?' (is-fallen? plateau probe')]
     (cond
       fallen? probe
       :else (set-fallen probe' fallen?'))))
@@ -111,3 +131,62 @@
    it won't move anymore."
   [plateau probe seq-of-moves]
   (reduce (partial move-and-check plateau) probe seq-of-moves))
+
+(defn get-line
+  "Gets a trimmed line of input from stdin."
+  []
+  (clojure.string/upper-case (clojure.string/trim (read-line))))
+
+;; TODO Add further validation?!
+(defn parse-plateau-size
+  "Gets the plateau size from stdin and produces a new plateau."
+  []
+  (let [input (get-line)
+        parse-int #(Integer/parseInt %)
+        [ux uy] (map parse-int (clojure.string/split input #" +"))
+        plateau (new-plateau [ux uy])]
+    plateau))
+
+;; TODO Add further validation?!
+(defn parse-initial-probe-position
+  []
+  (let [input (get-line)]
+    (if (empty? input)
+      :end
+      (let [[cx cy cd] (clojure.string/split input  #" +")
+            parse-int #(Integer/parseInt %)
+            [x y] (map parse-int [cx cy])
+            direction (char->direction (first cd))]
+        (new-probe x y direction)))))
+
+(defn parse-movements
+  []
+  (map char->move (get-line)))
+
+(defn process-sequence-of-probes
+  "To be used in the main loop of the program.
+   Given an existing plateau and a vector of previous probes,
+   tries to get information about the new probe.
+   If it gets an empty line, all probes are printed
+   and the program exits."
+  [plateau v-probes]
+  (let [probe (parse-initial-probe-position)]
+    (if (= probe :end)
+      v-probes
+      (let [probe' (set-fallen probe (is-fallen? plateau probe))
+            moves (parse-movements)
+            probe'' (move-over-plateau plateau probe' moves)]
+        (recur plateau (conj v-probes probe''))))))
+
+(defn print-probe
+  "Returns the string representation of a single probe
+   in the desired output format."
+  [{x :x y :y direction :direction}]
+  (apply str (interpose " " [x y (map-dir-to-char direction)])))
+
+(defn -main
+  []
+  (do
+    (def plateau (parse-plateau-size))
+    (def v-probes (process-sequence-of-probes plateau []))
+    (dorun (map (comp println print-probe) v-probes))))
