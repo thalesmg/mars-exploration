@@ -50,14 +50,19 @@
         {ux :x uy :y} (get plateau :upper-bounds)]
     [[lx ly] [ux uy]]))
 
-(defn is-on-plateau?
-  "Checks whether a probe is on the plateau or if it has fallen."
-  [plateau probe]
-  (let [[[lx ly] [ux uy]] (get-bounds plateau)
-        {x :x y :y} probe]
+(defn *is-on-plateau?
+  "Helper function to `is-on-plateau?`"
+  [plateau [x y]]
+  (let [[[lx ly] [ux uy]] (get-bounds plateau)]
     (if (and (<= lx x ux) (<= ly y uy))
       true
       false)))
+
+(defn is-on-plateau?
+  "Checks whether a probe is on the plateau or if it has fallen."
+  [plateau probe]
+  (let [{x :x y :y} probe]
+    (*is-on-plateau? plateau [x y])))
 
 (def is-fallen? (complement is-on-plateau?))
 
@@ -184,9 +189,57 @@
   [{x :x y :y direction :direction}]
   (apply str (interpose " " [x y (map-dir-to-char direction)])))
 
+(def map-dir-to-probe-str
+  {:N \^
+   :W \<
+   :E \>
+   :S \v})
+
+(defn generate-pairs
+  "Generates pairs of elements from two collections. The first element
+  varies faster."
+  [v1 v2]
+  (let [inner (fn [y]
+                (map #(vec [% y]) v1))]
+    (map inner v2)))
+
+(defn print-blank-plateau
+  [plateau]
+  (let [[[lx ly] [ux uy]] (get-bounds plateau)
+        [lx' ly'] [(dec lx) (dec ly)]
+        [ux' uy'] [(+ 2 ux) (+ 2 uy)]
+        print-xy (fn [[x y]]
+                   (if (*is-on-plateau? plateau [x y])
+                     "#"
+                     " "))
+        print-row (fn [row]
+                    (apply str (map print-xy row)))]
+    (map print-row (generate-pairs (range lx' ux') (range ly' uy')))))
+
+(defn print-plateau
+  "Returns the string representation of a plateau
+   and the probes over it."
+  [plateau v-probes]
+  (let [[[lx ly] [ux uy]] (get-bounds plateau)
+        [lx' ly'] [(dec lx) (dec ly)]
+        [ux' uy'] [(+ 2 ux) (+ 2 uy)]
+        blank (vec (map vec (print-blank-plateau plateau)))
+        print-probe (fn [acc {x :x y :y dir :direction}]
+                      (assoc-in acc [(+ (- uy' y) ly') (- x lx')] (map-dir-to-probe-str dir)))
+        raw-plateau (reduce print-probe blank v-probes)]
+    (map #(apply str %) raw-plateau)))
+
 (defn -main
-  []
+  [& args]
   (do
+    (def plot?
+      (if (= "--plot" (first args))
+        true
+        false))
     (def plateau (parse-plateau-size))
     (def v-probes (process-sequence-of-probes plateau []))
-    (dorun (map (comp println print-probe) v-probes))))
+    (dorun (map (comp println print-probe) v-probes))
+    (if plot?
+      (doseq [line (print-plateau plateau v-probes)]
+        (println line))
+      nil)))
