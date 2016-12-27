@@ -42,9 +42,9 @@ of the plateau.
     3. Repeat these two steps for each probe.
 3. To end the processing and see the output, enter an empty line.
 
-A standalone `jar` file is also provided and can be run with `java`:
+Alternatively, a standalone `jar` file is also provided and can be run with `java`:
 
-    $ java -jar target/uberjar/mars-exploration-0.1.0-SNAPSHOT-standalone.jar [--plot]
+    $ java -jar mars-exploration-0.1.0-SNAPSHOT-standalone.jar [--plot]
 
 The program reads input from `stdin`.
 
