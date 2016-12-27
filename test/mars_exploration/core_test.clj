@@ -58,3 +58,9 @@
           moves (map char->move "MMMM")
           after (set-fallen (new-probe 5 6 :N))]
       (move-over-plateau plateau5x5 before moves) => after)))
+
+(facts "About plotting the plateau"
+  (fact "The plateau should be plotted correctly."
+    (let [plateau (new-plateau [5 5])
+          v-probes [{:x 1, :y 3, :direction :N, :fallen? false} {:x 5, :y 1, :direction :E, :fallen? false}]]
+      (print-plateau plateau v-probes) => '("        " " ...... " " ...... " " .^.... " " ...... " " .....> " " ...... " "        "))))

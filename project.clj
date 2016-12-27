@@ -1,6 +1,6 @@
 (defproject mars-exploration "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
-  :url "http://example.com/FIXME"
+  :description "Controls probes to explore Mars surface."
+  :url "http://github.com/thalesmg/mars-exploration"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.8.0"]]

@@ -140,7 +140,10 @@
 (defn get-line
   "Gets a trimmed line of input from stdin."
   []
-  (clojure.string/upper-case (clojure.string/trim (read-line))))
+  (let [input (read-line)]
+    (if (nil? input)
+      ""
+      (clojure.string/upper-case (clojure.string/trim input)))))
 
 ;; TODO Add further validation?!
 (defn parse-plateau-size
@@ -210,7 +213,7 @@
         [ux' uy'] [(+ 2 ux) (+ 2 uy)]
         print-xy (fn [[x y]]
                    (if (*is-on-plateau? plateau [x y])
-                     "#"
+                     "."
                      " "))
         print-row (fn [row]
                     (apply str (map print-xy row)))]
